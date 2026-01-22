@@ -517,7 +517,7 @@ def main():
         if st.session_state.column_mapping:
             st.header("Step 3: Process & Validate Data")
             
-            if st.button("💥 Process Data", type="primary", use_container_width=True):
+            if st.button("💥 Boom ", type="primary", use_container_width=True):
                 with st.spinner("Processing data..."):
                     template_columns = list(st.session_state.our_format_df.columns)
                     processed_df, correction_df = process_data(
