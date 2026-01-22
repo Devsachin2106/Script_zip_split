@@ -13,6 +13,8 @@ if 'our_format_df' not in st.session_state:
     st.session_state.our_format_df = None
 if 'column_mapping' not in st.session_state:
     st.session_state.column_mapping = {}
+if 'column_prefixes' not in st.session_state:
+    st.session_state.column_prefixes = {}  # Store prefixes for register number columns
 
 def auto_map_columns(our_columns, client_columns):
     """Automatically map columns based on name similarity"""
@@ -258,8 +260,10 @@ def validate_mobile(mobile):
     
     return mobile_str, None, corrections
 
-def process_data(client_df, column_mapping, template_columns):
+def process_data(client_df, column_mapping, template_columns, column_prefixes=None):
     """Process the client data according to mapping and validation rules"""
+    if column_prefixes is None:
+        column_prefixes = {}
     
     # Create a new dataframe for our format with all template columns in order
     processed_data = []
@@ -277,6 +281,9 @@ def process_data(client_df, column_mapping, template_columns):
         for our_col, client_col in column_mapping.items():
             if client_col and client_col != 'None':
                 value = row[client_col]
+                
+                # Check if this column has a prefix (for register number columns)
+                prefix = column_prefixes.get(our_col, "")
                 
                 # Apply validation based on column type
                 if 'name' in our_col.lower() or 'firstname' in our_col.lower() or 'lastname' in our_col.lower():
@@ -303,7 +310,11 @@ def process_data(client_df, column_mapping, template_columns):
                 
                 else:
                     # For other columns, just copy the value
-                    processed_row[our_col] = value
+                    # If there's a prefix and value is not empty, append prefix
+                    if prefix and pd.notna(value) and str(value).strip():
+                        processed_row[our_col] = prefix + str(value).strip()
+                    else:
+                        processed_row[our_col] = value
         
         # Add row to processed data
         processed_data.append(processed_row)
@@ -349,9 +360,11 @@ def main():
                     st.session_state.client_df = pd.read_excel(client_file)
                 st.success(f"✅ Loaded {len(st.session_state.client_df)} rows")
                 st.dataframe(st.session_state.client_df.head(3), use_container_width=True)
-                # Clear mapping when new client file is uploaded
+                # Clear mapping and prefixes when new client file is uploaded
                 if 'column_mapping' in st.session_state:
                     st.session_state.column_mapping = {}
+                if 'column_prefixes' in st.session_state:
+                    st.session_state.column_prefixes = {}
             except Exception as e:
                 st.error(f"Error reading file: {e}")
     
@@ -368,9 +381,11 @@ def main():
                     st.session_state.our_format_df = pd.read_excel(our_file)
                 st.success(f"✅ Template loaded with {len(st.session_state.our_format_df.columns)} columns")
                 st.dataframe(st.session_state.our_format_df.head(1), use_container_width=True)
-                # Clear mapping when new template file is uploaded
+                # Clear mapping and prefixes when new template file is uploaded
                 if 'column_mapping' in st.session_state:
                     st.session_state.column_mapping = {}
+                if 'column_prefixes' in st.session_state:
+                    st.session_state.column_prefixes = {}
             except Exception as e:
                 st.error(f"Error reading file: {e}")
     
@@ -405,15 +420,40 @@ def main():
         st.info("💡 Columns are automatically mapped. You can manually adjust any mapping below.")
         
         # Create mapping interface
-        col1, col2, col3 = st.columns([2, 1, 2])
+        # Check if there are any register number columns
+        has_register_col = any(any(keyword in col.lower() for keyword in ['register', 'reg', 'regno', 'reg_no', 'registration']) 
+                               for col in our_columns)
         
-        with col1:
-            st.markdown("**Our Format Columns**")
-        with col3:
-            st.markdown("**Client File Columns**")
+        # Always use consistent column structure for alignment
+        if has_register_col:
+            # Header with 4 columns when register columns exist
+            header_col1, header_col2, header_col3, header_col4 = st.columns([2, 1, 2, 1.5])
+            with header_col1:
+                st.markdown("**Our Format Columns**")
+            with header_col2:
+                st.markdown("**→**")
+            with header_col3:
+                st.markdown("**Client File Columns**")
+            with header_col4:
+                st.markdown("**Prefix (Register No.)**")
+        else:
+            # Standard 3 column header
+            col1, col2, col3 = st.columns([2, 1, 2])
+            with col1:
+                st.markdown("**Our Format Columns**")
+            with col3:
+                st.markdown("**Client File Columns**")
         
         for our_col in our_columns:
-            col1, col2, col3 = st.columns([2, 1, 2])
+            # Check if this is a register number column
+            is_register_col = any(keyword in our_col.lower() for keyword in ['register', 'reg', 'regno', 'reg_no', 'registration'])
+            
+            # Use consistent column structure - always 4 columns if register columns exist
+            if has_register_col:
+                col1, col2, col3, col4 = st.columns([2, 1, 2, 1.5])
+            else:
+                col1, col2, col3 = st.columns([2, 1, 2])
+                col4 = None
             
             with col1:
                 st.text(our_col)
@@ -448,6 +488,26 @@ def main():
                     st.session_state.column_mapping[our_col] = selected
                 elif our_col in st.session_state.column_mapping:
                     del st.session_state.column_mapping[our_col]
+            
+            # Add prefix input for register number columns in the 4th column
+            if is_register_col and col4:
+                with col4:
+                    current_prefix = st.session_state.column_prefixes.get(our_col, "")
+                    prefix = st.text_input(
+                        "Prefix",
+                        value=current_prefix,
+                        key=f"prefix_{our_col}",
+                        help="Enter prefix to append to register numbers (e.g., REG-)",
+                        placeholder="e.g., REG-"
+                    )
+                    if prefix:
+                        st.session_state.column_prefixes[our_col] = prefix
+                    elif our_col in st.session_state.column_prefixes:
+                        del st.session_state.column_prefixes[our_col]
+            elif has_register_col and col4:
+                # Empty space for non-register columns to maintain alignment
+                with col4:
+                    st.empty()
         
         st.markdown("---")
         
@@ -461,7 +521,8 @@ def main():
                     processed_df, correction_df = process_data(
                         st.session_state.client_df,
                         st.session_state.column_mapping,
-                        template_columns
+                        template_columns,
+                        st.session_state.column_prefixes
                     )
                     
                     st.session_state.processed_df = processed_df
