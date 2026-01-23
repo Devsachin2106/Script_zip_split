@@ -1,0 +1,216 @@
+📱 UNIT-CHAPTER-TOPIC PROCESSOR - SIMPLE GUIDE
+
+Hey! 👋 Here's how to use this tool
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 WHAT IT DOES:
+
+TWO OPTIONS to process your data!
+
+OPTION 1️⃣: Unit → All Chapters (comma-separated)
+OPTION 2️⃣: Separate CSV for each Chapter with topics
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 YOUR CSV MUST HAVE:
+
+3 columns exactly:
+✅ Unit (ex: "Indian Polity (UNIT 4)")
+✅ Chapter (ex: "Evolution of Indian Constitution")
+✅ Topic (ex: "Regulating act of 1773")
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ STEP 1: UPLOAD FILE
+
+• Click "Upload your CSV file"
+• Select your file
+• See preview ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 STEP 2: CHOOSE OPTION
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 OPTION 1: UNIT-CHAPTER MAPPING
+
+What it does:
+Combines all chapters under one unit in single row
+
+Example Input:
+Unit: Indian Polity (UNIT 4)
+Chapters: Evolution of Constitution
+         Making of Constitution
+         Preamble
+
+Example Output:
+Unit                    | Chapters
+Indian Polity (UNIT 4)  | Evolution of Constitution, Making of Constitution, Preamble
+
+How to use:
+1️⃣ Go to "Option 1" tab
+2️⃣ Click "🚀 Generate Unit-Chapter Mapping"
+3️⃣ See result table
+4️⃣ Download as CSV or Excel ✅
+
+Perfect for:
+✅ Quick reference
+✅ Course outlines
+✅ Study guides
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 OPTION 2: TOPIC SEGREGATION
+
+What it does:
+Creates separate CSV for EACH chapter with all its topics
+
+Example Input:
+Same as above
+
+Example Output (ZIP file):
+📦 Topics_by_Chapter.zip
+  📄 Evolution_of_Indian_Constitution.csv
+  📄 Making_of_Indian_Constitution.csv
+  📄 Preamble.csv
+  📄 SUMMARY.txt
+
+How to use:
+1️⃣ Go to "Option 2" tab
+2️⃣ Check ☑️ "Include summary" (optional)
+3️⃣ Click "🚀 Generate ZIP File"
+4️⃣ Download ZIP
+5️⃣ Extract to see all chapter files ✅
+
+Perfect for:
+✅ Separate study materials
+✅ Distribute by chapter
+✅ Organized learning
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 REAL EXAMPLE:
+
+Your CSV (34 rows):
+Unit: Indian Polity (UNIT 4)
+  Chapter: Evolution of Constitution (11 topics)
+  Chapter: Making of Constitution (6 topics)
+  Chapter: Preamble (4 topics)
+
+Unit: Indian Economy (UNIT 5)
+  Chapter: Basics of Economy (8 topics)
+  ...
+
+OPTION 1 gives you:
+1 file with 2 rows:
+Row 1: Indian Polity | Evolution, Making, Preamble
+Row 2: Indian Economy | Basics, Nature, Five-year
+
+OPTION 2 gives you:
+ZIP with 6 files:
+- Evolution_of_Constitution.csv
+- Making_of_Constitution.csv
+- Preamble.csv
+- Basics_of_Economy.csv
+- Nature_of_Indian_Economy.csv
+- Five_year_plan.csv
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❓ QUICK FAQ:
+
+Q: Can I use both options?
+A: YES! Process same file both ways
+
+Q: Which option should I use?
+A: Option 1 → Quick overview
+   Option 2 → Detailed separate files
+
+Q: What if column names are different?
+A: Rename them to: Unit, Chapter, Topic
+
+Q: Can I process multiple times?
+A: Yes! Upload and process any time
+
+Q: CSV or Excel for Option 1?
+A: Both available! Your choice
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ COMMON ISSUES:
+
+Problem: Upload fails
+→ Check file is CSV format
+→ Check column names: Unit, Chapter, Topic
+
+Problem: "Must have these columns" error
+→ Rename columns exactly as: Unit, Chapter, Topic
+
+Problem: Empty output
+→ Check for empty Unit/Chapter values
+→ Make sure data is filled properly
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ CHECKLIST:
+
+Before starting:
+□ Have CSV file ready
+□ File has 3 columns: Unit, Chapter, Topic
+□ Column names are exact
+□ Data is filled (no empty units/chapters)
+
+After Option 1:
+□ Downloaded CSV or Excel
+□ File has Unit-Chapter mapping
+□ All chapters comma-separated
+
+After Option 2:
+□ Downloaded ZIP file
+□ Extracted ZIP
+□ Found all chapter CSV files
+□ Checked summary (if included)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎓 WHICH OPTION TO USE?
+
+Need overview? → OPTION 1
+Unit → All chapters in one place
+Quick reference
+Single file
+
+Need details? → OPTION 2
+Chapter → Separate file with topics
+Organized materials
+Multiple files in ZIP
+
+Want both? → DO BOTH!
+Use same file for both options ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💻 HOW TO RUN:
+
+1. Open terminal/command prompt
+2. Type: streamlit run unit_chapter_topic_processor.py
+3. Browser opens automatically
+4. Start using! 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 THAT'S IT!
+
+Super simple:
+1️⃣ Upload CSV
+2️⃣ Pick Option 1 or 2
+3️⃣ Download result
+
+Total time: 1-2 minutes! ⚡
+
+Questions? Contact support 📞
+
+---
+Last updated: January 2026
