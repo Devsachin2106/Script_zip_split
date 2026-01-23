@@ -47,63 +47,83 @@ def create_unit_chapter_mapping(df):
 
 def segregate_by_chapter(df):
     """
-    Segregate topics by chapter
-    Create separate CSV for each chapter with its topics
+    Segregate topics by chapter, organized by unit folders
+    Each CSV contains only the Topic column in order
     """
     segregated = {}
     
-    chapters = df['Chapter'].unique()
-    chapters = [ch for ch in chapters if pd.notna(ch)]
-    
-    for chapter in sorted(chapters):
-        chapter_df = df[df['Chapter'] == chapter].copy()
-        clean_chapter_name = clean_filename(str(chapter))
-        
-        segregated[clean_chapter_name] = {
-            'data': chapter_df,
-            'original_name': str(chapter),
-            'count': len(chapter_df),
-            'topics': chapter_df['Topic'].tolist()
-        }
+    # Group by Unit first
+    for unit in df['Unit'].unique():
+        if pd.notna(unit):
+            unit_df = df[df['Unit'] == unit]
+            clean_unit_name = clean_filename(str(unit))
+            
+            # For each chapter in this unit
+            for chapter in unit_df['Chapter'].unique():
+                if pd.notna(chapter):
+                    chapter_df = unit_df[unit_df['Chapter'] == chapter].copy()
+                    clean_chapter_name = clean_filename(str(chapter))
+                    
+                    # Create only Topic column dataframe (in order)
+                    topic_only_df = pd.DataFrame({
+                        'Topic': chapter_df['Topic'].tolist()
+                    })
+                    
+                    # Key format: unit_folder/chapter_file
+                    key = f"{clean_unit_name}/{clean_chapter_name}"
+                    
+                    segregated[key] = {
+                        'data': topic_only_df,
+                        'unit': str(unit),
+                        'chapter': str(chapter),
+                        'count': len(topic_only_df),
+                        'topics': topic_only_df['Topic'].tolist()
+                    }
     
     return segregated
 
 def create_chapter_zip(segregated_data, include_summary=True):
-    """Create ZIP file with chapter-wise topic CSVs"""
+    """Create ZIP file with hierarchical structure: Unit folders → Chapter CSVs (Topic only)"""
     zip_buffer = BytesIO()
     
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        # Add each chapter CSV
-        for chapter_name, chapter_info in segregated_data.items():
+        # Add each chapter CSV in its unit folder
+        for key, chapter_info in segregated_data.items():
+            # key format is "unit_folder/chapter_file"
             csv_data = chapter_info['data'].to_csv(index=False)
-            filename = f"{chapter_name}.csv"
+            filename = f"{key}.csv"
             zip_file.writestr(filename, csv_data)
         
-        # Add summary file
+        # Add summary file at root
         if include_summary:
             summary_lines = []
             summary_lines.append("=" * 70)
-            summary_lines.append("TOPIC SEGREGATION BY CHAPTER - SUMMARY")
+            summary_lines.append("TOPIC SEGREGATION BY CHAPTER - HIERARCHICAL SUMMARY")
             summary_lines.append("=" * 70)
             summary_lines.append("")
             summary_lines.append(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            summary_lines.append(f"Total Chapters: {len(segregated_data)}")
+            summary_lines.append(f"Total Files: {len(segregated_data)}")
             summary_lines.append(f"Total Topics: {sum(info['count'] for info in segregated_data.values())}")
             summary_lines.append("")
             summary_lines.append("=" * 70)
-            summary_lines.append("CHAPTER-WISE BREAKDOWN")
+            summary_lines.append("FOLDER STRUCTURE")
             summary_lines.append("=" * 70)
             summary_lines.append("")
             
-            for idx, (chapter_name, chapter_info) in enumerate(segregated_data.items(), 1):
-                summary_lines.append(f"{idx}. CHAPTER: {chapter_info['original_name']}")
-                summary_lines.append(f"   File: {chapter_name}.csv")
-                summary_lines.append(f"   Topics Count: {chapter_info['count']}")
-                summary_lines.append(f"   Topics:")
+            # Group by unit for display
+            current_unit = None
+            for idx, (key, chapter_info) in enumerate(sorted(segregated_data.items()), 1):
+                unit = chapter_info['unit']
+                chapter = chapter_info['chapter']
+                
+                if unit != current_unit:
+                    summary_lines.append(f"\n📁 {unit}")
+                    current_unit = unit
+                
+                summary_lines.append(f"   └─ 📄 {chapter}.csv ({chapter_info['count']} topics)")
+                summary_lines.append(f"      Topics:")
                 for topic in chapter_info['topics']:
-                    summary_lines.append(f"      - {topic}")
-                summary_lines.append("")
-                summary_lines.append("-" * 70)
+                    summary_lines.append(f"         • {topic}")
                 summary_lines.append("")
             
             summary_lines.append("=" * 70)
@@ -288,22 +308,30 @@ Indian Polity (UNIT 4)        | Evolution of Indian Constitution,
             st.info("This will create separate CSV files for each chapter with all its topics, packaged in a ZIP file")
             
             # Show what will be generated
-            chapters = df['Chapter'].unique()
-            chapters = [ch for ch in chapters if pd.notna(ch)]
-            
             col1, col2 = st.columns([2, 1])
             
             with col1:
-                st.markdown("**Files that will be generated:**")
-                with st.expander("View all chapter files", expanded=True):
-                    for chapter in sorted(chapters):
-                        chapter_df = df[df['Chapter'] == chapter]
-                        clean_name = clean_filename(chapter)
-                        st.markdown(f"- `{clean_name}.csv` ({len(chapter_df)} topics)")
+                st.markdown("**Files that will be generated (Hierarchical by Unit):**")
+                with st.expander("View folder structure", expanded=True):
+                    # Group by unit
+                    units = df['Unit'].unique()
+                    for unit in sorted(units):
+                        if pd.notna(unit):
+                            unit_df = df[df['Unit'] == unit]
+                            chapters = unit_df['Chapter'].unique()
+                            clean_unit = clean_filename(str(unit))
+                            st.markdown(f"**📁 {clean_unit}/**")
+                            for chapter in sorted(chapters):
+                                if pd.notna(chapter):
+                                    chapter_df = unit_df[unit_df['Chapter'] == chapter]
+                                    clean_chapter = clean_filename(str(chapter))
+                                    st.markdown(f"   └─ `{clean_chapter}.csv` (Topic column only, {len(chapter_df)} rows)")
+                            st.markdown("")
             
             with col2:
                 st.markdown("**Stats:**")
-                st.metric("CSV Files", len(chapters))
+                st.metric("Unit Folders", df['Unit'].nunique())
+                st.metric("CSV Files", df['Chapter'].nunique())
                 st.metric("Total Topics", len(df))
                 
                 include_summary = st.checkbox(
@@ -342,25 +370,27 @@ Indian Polity (UNIT 4)        | Evolution of Indian Constitution,
                         
                         # Show contents
                         st.markdown("---")
-                        st.markdown("### 📂 ZIP Contents:")
+                        st.markdown("### 📂 ZIP Contents (Hierarchical Structure):")
                         
-                        files_list = []
-                        for chapter_name, chapter_info in segregated_data.items():
-                            files_list.append({
-                                'Filename': f"{chapter_name}.csv",
-                                'Chapter': chapter_info['original_name'],
+                        # Group by unit for display
+                        files_by_unit = {}
+                        for key, chapter_info in segregated_data.items():
+                            unit = chapter_info['unit']
+                            if unit not in files_by_unit:
+                                files_by_unit[unit] = []
+                            files_by_unit[unit].append({
+                                'Path': key + '.csv',
+                                'Chapter': chapter_info['chapter'],
                                 'Topics': chapter_info['count']
                             })
                         
-                        if include_summary:
-                            files_list.append({
-                                'Filename': 'SUMMARY.txt',
-                                'Chapter': 'Summary Report',
-                                'Topics': '-'
-                            })
+                        for unit, files in sorted(files_by_unit.items()):
+                            with st.expander(f"📁 {unit}", expanded=True):
+                                files_df = pd.DataFrame(files)
+                                st.dataframe(files_df, use_container_width=True)
                         
-                        files_df = pd.DataFrame(files_list)
-                        st.dataframe(files_df, use_container_width=True)
+                        if include_summary:
+                            st.info("📄 SUMMARY.txt - Complete breakdown at ZIP root")
                         
                     except Exception as e:
                         st.error(f"❌ Error creating ZIP: {e}")
