@@ -35,6 +35,36 @@ def get_unit_prefix(unit_name):
         return f"UNIT{match.group(1)}"
     return "UNIT"
 
+def clean_topic_name(topic):
+    """Clean topic name by replacing commas with hyphens"""
+    if pd.isna(topic):
+        return topic
+    # Replace comma with space-hyphen-space
+    topic_str = str(topic).replace(',', ' -')
+    # Clean up multiple spaces
+    topic_str = re.sub(r'\s+', ' ', topic_str)
+    return topic_str.strip()
+
+def has_tamil_characters(text):
+    """Check if text contains Tamil characters"""
+    if pd.isna(text):
+        return False
+    # Tamil Unicode range: \u0B80-\u0BFF
+    return bool(re.search(r'[\u0B80-\u0BFF]', str(text)))
+
+def wrap_tamil_in_html(topic):
+    """Wrap Tamil content in HTML tags with $editorvalue in correct format"""
+    if pd.isna(topic):
+        return topic
+    
+    topic_str = str(topic)
+    
+    # If contains Tamil characters, wrap in HTML with proper format
+    if has_tamil_characters(topic_str):
+        return f'$editorvalue <p class="MsoNormal" style=""><span style="">{topic_str}</span></p>'
+    
+    return topic_str
+
 def create_unit_chapter_mapping(df):
     """Create Unit-Chapter mapping"""
     unit_chapter_map = []
@@ -66,8 +96,12 @@ def segregate_by_chapter(df, remove_duplicates=False):
                     chapter_df = unit_df[unit_df['Chapter'] == chapter].copy()
                     clean_chapter_name = clean_filename(str(chapter))
                     
-                    # Get topics list
-                    topics_list = chapter_df['Topic'].tolist()
+                    # Get topics list, clean them, and wrap Tamil in HTML
+                    topics_list = []
+                    for t in chapter_df['Topic'].tolist():
+                        cleaned = clean_topic_name(t)
+                        wrapped = wrap_tamil_in_html(cleaned)
+                        topics_list.append(wrapped)
                     
                     # Remove duplicates while preserving order if requested
                     if remove_duplicates:
@@ -99,8 +133,9 @@ def create_chapter_zip(segregated_data, include_summary=True):
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         # Add each chapter CSV at root level (no folders)
         for filename, chapter_info in segregated_data.items():
-            csv_data = chapter_info['data'].to_csv(index=False)
-            zip_file.writestr(f"{filename}.csv", csv_data)
+            # Convert to CSV with UTF-8 encoding for Tamil characters
+            csv_data = chapter_info['data'].to_csv(index=False, encoding='utf-8-sig')
+            zip_file.writestr(f"{filename}.csv", csv_data.encode('utf-8-sig'))
         
         if include_summary:
             summary_lines = []
@@ -138,7 +173,8 @@ def create_chapter_zip(segregated_data, include_summary=True):
             summary_lines.append("=" * 70)
             
             summary_text = "\n".join(summary_lines)
-            zip_file.writestr("SUMMARY.txt", summary_text)
+            # Encode summary with UTF-8 for Tamil characters
+            zip_file.writestr("SUMMARY.txt", summary_text.encode('utf-8-sig'))
     
     zip_buffer.seek(0)
     return zip_buffer
@@ -177,7 +213,27 @@ def main():
     
     if uploaded_file:
         try:
-            df = pd.read_csv(uploaded_file)
+            # Try reading with UTF-8 first, then fallback to other encodings
+            encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'iso-8859-1', 'cp1252']
+            df = None
+            used_encoding = None
+            
+            for encoding in encodings:
+                try:
+                    uploaded_file.seek(0)
+                    df = pd.read_csv(uploaded_file, encoding=encoding)
+                    used_encoding = encoding
+                    break
+                except (UnicodeDecodeError, UnicodeError):
+                    continue
+            
+            if df is None:
+                st.error("❌ Could not read file. Please save your CSV with UTF-8 encoding.")
+                st.info("💡 In Excel: File → Save As → CSV UTF-8 (Comma delimited)")
+                return
+            
+            if used_encoding != 'utf-8':
+                st.warning(f"⚠️ File read with '{used_encoding}' encoding. For Tamil characters, please use UTF-8.")
             
             required_columns = ['Unit', 'Chapter', 'Topic']
             if not all(col in df.columns for col in required_columns):
@@ -265,10 +321,10 @@ Indian Polity (UNIT 4)   | Evolution, Making, Preamble
                         col1, col2 = st.columns(2)
                         
                         with col1:
-                            csv_data = unit_chapter_df.to_csv(index=False)
+                            csv_data = unit_chapter_df.to_csv(index=False, encoding='utf-8-sig')
                             st.download_button(
                                 label="📥 Download as CSV",
-                                data=csv_data,
+                                data=csv_data.encode('utf-8-sig'),
                                 file_name=f"Unit_Chapter_Mapping_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                                 mime="text/csv",
                                 use_container_width=True
@@ -295,7 +351,7 @@ Indian Polity (UNIT 4)   | Evolution, Making, Preamble
         # OPTION 2
         with tab2:
             st.markdown("### Topic Segregation by Chapter")
-            st.info("Creates separate CSV files for each chapter with only Topic column. Files named as: UNIT4_ChapterName.csv")
+            st.info("Creates separate CSV files for each chapter with only Topic column. Tamil content automatically wrapped in HTML tags with $editorvalue. Files named as: UNIT4_ChapterName.csv")
             
             col1, col2 = st.columns([2, 1])
             
