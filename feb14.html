@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Love Quote 💖</title>
+
+<style>
+:root {
+    --bg: radial-gradient(circle at top left, #1a1a2e 0, #000 45%, #240046 100%);
+    --card: rgba(10,10,40,0.9);
+    --card-border: rgba(0,255,255,0.5);
+    --btn: #00f5d4;
+    --btn-shadow: rgba(0,245,212,0.85);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.container {
+    width: min(420px, 92%);
+    background: var(--card);
+    padding: 28px 24px 30px;
+    border-radius: 24px;
+    text-align: center;
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 20px 45px rgba(0,0,0,0.35);
+    position: relative;
+    overflow: hidden;
+}
+
+.container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top, rgba(0,255,255,0.12), transparent 55%);
+    pointer-events: none;
+}
+
+.title {
+    font-size: 1.7rem;
+    margin: 0 0 4px;
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 12px rgba(0,255,255,0.9), 0 0 24px rgba(255,0,255,0.6);
+}
+
+.subtitle {
+    margin: 0 0 20px;
+    font-size: 0.9rem;
+    opacity: 0.85;
+}
+
+.input-label {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    text-align: left;
+    opacity: 0.9;
+}
+
+input {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.6);
+    font-size: 15px;
+    outline: none;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    backdrop-filter: blur(12px);
+}
+
+input::placeholder {
+    color: rgba(255,255,255,0.7);
+}
+
+input:focus {
+    border-color: #00f5d4;
+    box-shadow: 0 0 12px rgba(0,245,212,0.8);
+}
+
+button {
+    padding: 12px 22px;
+    border-radius: 999px;
+    border: none;
+    font-size: 15px;
+    margin-top: 6px;
+    background: radial-gradient(circle at top left, #ff00ff, #7400ff 40%, var(--btn) 100%);
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    box-shadow: 0 10px 24px var(--btn-shadow);
+    transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+}
+
+button:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
+
+.quote-card {
+    margin-top: 20px;
+    padding: 16px 18px 18px;
+    border-radius: 18px;
+    background: rgba(0,0,0,0.18);
+    border: 1px solid rgba(255,255,255,0.35);
+    font-size: 0.98rem;
+    line-height: 1.6;
+    position: relative;
+}
+
+.quote-card::before {
+    content: "“";
+    position: absolute;
+    top: -26px;
+    left: 10px;
+    font-size: 4rem;
+    opacity: 0.12;
+}
+
+.quote-text {
+    margin: 0;
+}
+
+.quote-name {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    opacity: 0.85;
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.25);
+    font-size: 0.75rem;
+    margin-bottom: 14px;
+    opacity: 0.9;
+}
+
+.pill span {
+    font-size: 0.9rem;
+}
+
+.heart {
+    position: fixed;
+    animation: fall 4s linear forwards;
+    pointer-events: none;
+}
+
+@keyframes fall {
+    from { transform: translateY(-10vh) translateX(0); opacity: 1; }
+    to { transform: translateY(110vh) translateX(20px); opacity: 0; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="mainPage">
+    <div class="pill">
+        <span>💘</span> Valentine’s Day
+    </div>
+
+    <h1 class="title">Soundarya, will you be my Valentine?</h1>
+
+    <div id="questionRow" style="display:flex; justify-content:center; gap:10px; margin-bottom:6px; margin-top:12px;">
+        <button id="yesBtn">YES 💖</button>
+        <button id="noBtn" style="background:rgba(0,0,0,0.4); box-shadow:none; position:relative;">NO 🙈</button>
+    </div>
+
+    <div class="quote-card" id="quoteCard" style="display:none;">
+        <p class="quote-text" id="quoteText"></p>
+        <p class="quote-name" id="loveLine"></p>
+        <button id="giftBtn" style="margin-top:12px;">CLICK FOR GIFT 🎁</button>
+        <p class="quote-name" id="giftText" style="margin-top:10px;"></p>
+    </div>
+</div>
+
+<script>
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const questionRow = document.getElementById("questionRow");
+const quoteCard = document.getElementById("quoteCard");
+const quoteText = document.getElementById("quoteText");
+const loveLine = document.getElementById("loveLine");
+const giftBtn = document.getElementById("giftBtn");
+const giftText = document.getElementById("giftText");
+
+const quotes = [
+    "Every love story is beautiful, but ours is my favorite.",
+    "You are my today and all of my tomorrows.",
+    "In a world full of temporary things, you are a permanent feeling in my heart.",
+    "My favorite place is inside your hug.",
+    "If I did anything right in my life, it was when I gave my heart to you.",
+    "Your smile quietly says more than a thousand love letters.",
+    "I saw that you were perfect, and I loved you. Then I saw you weren’t perfect, and I loved you even more.",
+    "I could start a fire with what I feel for you.",
+    "You are the poem I never knew how to write and this life is the story I always wanted to tell with you.",
+    "You are the reason my heart beats a little faster and my world feels a little softer."
+];
+
+const gifts = [
+    "A candle-light dinner under the stars.",
+    "A handwritten love letter sealed with a kiss.",
+    "A surprise movie night with your favorite snacks.",
+    "A warm hug that lasts a little longer than usual.",
+    "A bouquet of your favorite flowers delivered with a secret note.",
+    "A slow dance to your favorite love song.",
+    "Breakfast in bed made with all your favorites.",
+    "A full day together with no phones, just us.",
+    "A framed photo of our sweetest memory.",
+    "A promise to love you a little more every single day."
+];
+
+const LOVER_NAME = "Soundarya";
+
+function getRandomQuote() {
+    const index = Math.floor(Math.random() * quotes.length);
+    return quotes[index];
+}
+
+function getRandomGift() {
+    const index = Math.floor(Math.random() * gifts.length);
+    return gifts[index];
+}
+
+function heartRain() {
+    for (let i = 0; i < 30; i++) {
+        const h = document.createElement("div");
+        h.className = "heart";
+        h.textContent = "💖";
+        h.style.left = Math.random() * 100 + "vw";
+        h.style.fontSize = 18 + Math.random() * 18 + "px";
+        h.style.animationDuration = 3.2 + Math.random() * 1.8 + "s";
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 5200);
+    }
+}
+
+function showQuoteCard(quote, loverName) {
+    quoteText.textContent = quote;
+    loveLine.textContent = `I love you ${loverName} ❤️`;
+    giftText.textContent = "";
+    quoteCard.style.display = "block";
+    if (questionRow) {
+        questionRow.style.display = "none";
+    }
+}
+
+function handleYesClick() {
+    const quote = getRandomQuote();
+    showQuoteCard(quote, LOVER_NAME);
+    heartRain();
+}
+
+function handleGiftClick() {
+    const gift = getRandomGift();
+    giftText.textContent = `Gift me: ${gift}`;
+}
+
+let noClickLevel = 0;
+
+function growYesButtonOnce() {
+    noClickLevel++;
+    const scale = 1 + noClickLevel * 0.25;
+    yesBtn.style.transform = `scale(${scale})`;
+}
+
+function handleNoClick(e) {
+    e.preventDefault();
+    growYesButtonOnce();
+}
+
+function setupEventListeners() {
+    yesBtn.addEventListener("click", handleYesClick);
+
+    giftBtn.addEventListener("click", handleGiftClick);
+    noBtn.addEventListener("click", handleNoClick);
+}
+
+setupEventListeners();
+</script>
+
+</body>
+</html>
